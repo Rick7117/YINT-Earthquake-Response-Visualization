@@ -2,7 +2,7 @@
 
 ZH | [EN](./README.md)
 
-<h1>DISC-FinLLM</h1>
+<h1>基于社区的社交媒体平台 YINT的城市分析可视化系统</h1>
   
 [![Generic badge](https://img.shields.io/badge/🤗-Huggingface%20Repo-green.svg)](https://huggingface.co/Go4miii/DISC-FinLLM)
 [![license](https://img.shields.io/github/license/modelscope/modelscope.svg)](./LICENSE)
