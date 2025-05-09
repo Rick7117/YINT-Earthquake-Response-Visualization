@@ -1,3 +1,16 @@
+<div align="center">
+
+ZH | [EN](./README.md)
+
+<h1>DISC-FinLLM</h1>
+  
+[![Generic badge](https://img.shields.io/badge/🤗-Huggingface%20Repo-green.svg)](https://huggingface.co/Go4miii/DISC-FinLLM)
+[![license](https://img.shields.io/github/license/modelscope/modelscope.svg)](./LICENSE)
+
+[Demo](https://fin.fudan-disc.com) | [技术报告](http://arxiv.org/abs/2310.15205)
+
+</div>
+
 ## 项目概述
 本项目旨在通过可视化分析圣希马克市地震后YINT社交媒体平台上的数据，帮助市政府有效分配紧急救援资源。系统能够识别不同社区的需求变化，并为资源调配提供数据支持。
 
