@@ -595,7 +595,7 @@ function drawMapWithHeatmap(geojson, messageCounts) {
         .attr("x", scaleSize / 2)
         .attr("y", 15)
         .attr("text-anchor", "middle")
-        .text(`${pixelScale.toFixed(2)} 单位`);
+        .text(`${pixelScale.toFixed(2)} Map Scale`);
 
     // 辅助函数
     function removeWhitespace(str) {
