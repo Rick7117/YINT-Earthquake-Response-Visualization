@@ -72,6 +72,14 @@ cd YINT-Earthquake-Response-Visualization
     python db_client.py
     ```
     3. 进入 Qdrant dashboard at http://localhost:6333/dashboard
+    4. 开发过程中不要关闭docker和数据库连接，否则会导致数据库无法连接。
+    5. 如需关闭数据库和docker
+    ```
+    ./stop-qdrant.sh
+    # or manually
+    docker stop bioasq-qdrant
+    docker rm bioasq-qdrant
+    ```
 
 4. 构建向量数据库
     1. 进入目录
@@ -90,6 +98,7 @@ cd YINT-Earthquake-Response-Visualization
     ```
     uv run main.py
     ```
+
 5. 启动数据库查询服务
     1. 进入目录
     ```
@@ -104,6 +113,7 @@ cd YINT-Earthquake-Response-Visualization
     uv run fastapi dev main.py
     ```
     4. 查询服务详见 http://localhost:8000.
+    5. 查询服务在前端运行过程中会被调用, 请确保服务正常运行。
 6. 启动前端
     
     用live server启动前端文件``index.html``

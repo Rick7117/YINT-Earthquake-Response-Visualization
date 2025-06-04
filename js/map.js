@@ -154,11 +154,67 @@ fetchDataFromQdrant().then(async (data) => {
     console.error('初始化地图数据失败:', error);
 });
 
+// 根据日期筛选器过滤数据
+function applyTimeFilters(data) {
+    console.log('=== 地图开始日期筛选过程 ===');
+    console.log('原始数据数量:', data.length);
+    
+    if (!window.filterManager) {
+        console.log('filterManager 不存在，返回原始数据');
+        return data;
+    }
+    
+    let filteredData = data;
+    
+    // 获取时间筛选器状态
+    const timeFilter = window.filterManager.getTimeFilter();
+    console.log('时间筛选器状态:', timeFilter);
+    
+    if (timeFilter.startTime || timeFilter.endTime) {
+        console.log('应用时间筛选...');
+        
+        filteredData = filteredData.filter(item => {
+            const itemTime = new Date(item.time);
+            
+            // 检查开始时间
+            if (timeFilter.startTime) {
+                const startTime = new Date(timeFilter.startTime);
+                if (itemTime < startTime) {
+                    console.log(`数据项被开始时间筛选掉: ${item.time} < ${timeFilter.startTime}`);
+                    return false;
+                }
+            }
+            
+            // 检查结束时间
+            if (timeFilter.endTime) {
+                const endTime = new Date(timeFilter.endTime);
+                if (itemTime > endTime) {
+                    console.log(`数据项被结束时间筛选掉: ${item.time} > ${timeFilter.endTime}`);
+                    return false;
+                }
+            }
+            
+            console.log(`数据项通过筛选: ${item.time}`);
+            return true;
+        });
+        
+        console.log('筛选后数据数量:', filteredData.length);
+    } else {
+        console.log('没有设置时间筛选条件，返回原始数据');
+    }
+    
+    console.log('=== 地图日期筛选过程结束 ===');
+    return filteredData;
+}
+
 // 处理地图数据的函数
 async function processMapData(selectedFilters = null) {
     try {
         // 根据筛选条件获取数据
-        const data = selectedFilters ? await fetchDataFromQdrant(selectedFilters) : csvData;
+        let data = selectedFilters ? await fetchDataFromQdrant(selectedFilters) : csvData;
+        
+        // 应用日期筛选器
+        data = applyTimeFilters(data);
         
         // 重置计数器
         regionMessageCounts = {};
