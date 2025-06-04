@@ -1,0 +1,44 @@
+{
+    "Infrastructure Damage": [
+        "Road damage",
+        "Bridge collapse",
+        "Sewer problems", 
+        "Power outage",
+        "Building collapse"
+    ],
+    "Emergency Help": [
+        "People trapped",
+        "Medical assistance needed",
+        "Material shortage"
+    ],
+    "Secondary Disaster Warning": [
+        "Aftershock report",
+        "Nuclear plant leakage",
+        "Fire risk",
+        "Gas leak",
+        "Traffic jam",
+        "Flood risk",
+        "Landslide warning"
+    ],
+    "Basic Life Issues": [
+        "Drinking water shortage",
+        "Food supply problems",
+        "Shelter needs",
+        "Sanitation issues",
+        "Medical supplies shortage",
+        "Telecommunication outage"
+    ],
+    "Psychological/Emotional Expression": [
+        "Panic emotions",
+        "Missing person notice",
+        "Mental support needs"
+    ],
+    "Non-disaster Related": [
+        "sales",
+        "Advertising",
+        "Daily social chat",
+        "Information verification needs",
+        "Rumors",
+        "Official information verification"
+    ]
+}

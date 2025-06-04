@@ -1,0 +1,140 @@
+/* 堆叠面积图容器样式 */
+.stackedarea-container {
+    width: calc(100% - 40px);
+    height: 54vh;
+    margin: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    position: absolute;
+    top: 125px;
+    left: 0;
+    right: 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.stackedarea-header {
+    color: #333;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px;
+    user-select: none;
+    font-size: 16px;
+}
+
+/* SVG样式 */
+.stackedarea-container svg {
+    width: 100%;
+    height: calc(100% - 40px);
+    display: block;
+}
+
+/* 坐标轴样式 */
+.stackedarea-container .axis {
+    font-size: 12px;
+}
+
+.stackedarea-container .axis path,
+.stackedarea-container .axis line {
+    fill: none;
+    stroke: #333;
+    shape-rendering: crispEdges;
+}
+
+.stackedarea-container .axis text {
+    fill: #333;
+    font-family: Arial, sans-serif;
+}
+
+/* 网格线样式 */
+.stackedarea-container .grid line {
+    stroke: #ddd;
+    stroke-opacity: 0.7;
+    shape-rendering: crispEdges;
+}
+
+.stackedarea-container .grid path {
+    stroke-width: 0;
+}
+
+/* 面积路径样式 */
+.stackedarea-container .area {
+    stroke-width: 1;
+    stroke-opacity: 0.8;
+}
+
+/* 图例样式 */
+.stackedarea-legend {
+    position: relative;
+    top: 0;
+    left: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 10px 0;
+    font-size: 12px;
+    box-shadow: none;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.stackedarea-legend-item {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.stackedarea-legend-color {
+    width: 12px;
+    height: 12px;
+    margin-right: 8px;
+    border-radius: 2px;
+}
+
+.stackedarea-legend-text {
+    font-size: 11px;
+    color: #333;
+}
+
+.stackedarea-legend-item:hover .stackedarea-legend-text {
+    font-weight: bold;
+}
+
+/* 工具提示样式 */
+.stackedarea-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .stackedarea-container {
+        width: 45%;
+        right: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .stackedarea-container {
+        width: 90%;
+        position: relative;
+        top: 0;
+        right: auto;
+        margin: 10px auto;
+    }
+}

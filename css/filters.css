@@ -1,0 +1,400 @@
+/* 筛选器容器样式 */
+.filters-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #667eea;
+    padding: 10px 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* 筛选器组样式 */
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+}
+
+.filter-group label {
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* 多选下拉框样式 */
+.multi-select {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.multi-select-button {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    height: 24px;
+    box-sizing: border-box;
+}
+
+.multi-select-button:hover {
+    border-color: #4a7eb3;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.multi-select-button.active {
+    border-color: #4a7eb3;
+    box-shadow: 0 0 0 2px rgba(74, 126, 179, 0.2);
+}
+
+.multi-select-arrow {
+    margin-left: 8px;
+    transition: transform 0.3s ease;
+    color: #666;
+}
+
+.multi-select-button.active .multi-select-arrow {
+    transform: rotate(180deg);
+}
+
+/* 下拉选项容器 */
+.multi-select-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 9999;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: none;
+}
+
+.multi-select-dropdown.show {
+    display: block;
+}
+
+/* 选项样式 */
+.multi-select-option {
+    padding: 4px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    transition: background-color 0.2s ease;
+}
+
+.multi-select-option:hover {
+    background-color: #f5f5f5;
+}
+
+.multi-select-option.selected {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.multi-select-option input[type="checkbox"] {
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+/* 全选/取消全选按钮 */
+.multi-select-actions {
+    padding: 4px 8px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+}
+
+.multi-select-action-btn {
+    background: none;
+    border: none;
+    color: #4a7eb3;
+    cursor: pointer;
+    font-size: 12px;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.multi-select-action-btn:hover {
+    color: #2c5282;
+}
+
+/* 选中计数显示 */
+.selected-count {
+    color: #666;
+    font-size: 12px;
+}
+
+/* 清空筛选按钮 */
+.clear-filters-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 4px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    margin-left: auto;
+}
+
+.clear-filters-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* 时间筛选器样式 */
+.time-filter-group {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    padding: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    width: 100%;
+    order: -1; /* 确保时间筛选器在第一行 */
+}
+
+.time-filter-container {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+}
+
+.time-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.time-label {
+    color: white;
+    font-size: 11px;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    margin-bottom: -5px !important;
+    white-space: nowrap;
+}
+
+/* 时间标签容器 */
+.time-labels-container {
+    display: flex;
+    gap: 72px;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.time-labels-container .time-label:first-child {
+    min-width: 20px;
+}
+
+.time-labels-container .time-label:nth-child(2) {
+    min-width: 40px;
+    text-align: center;
+    margin-right: -35px;
+}
+
+.time-labels-container .time-label:nth-child(3) {
+    min-width: 10px;
+    text-align: center;
+}
+
+/* 日期时间输入容器 */
+.datetime-input-container {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/* 日期输入框 */
+.time-date-input {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 11px;
+    color: #333;
+    transition: all 0.3s ease;
+    min-width: 100px;
+    width: 100px;
+    height: 13px;
+}
+
+.time-date-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.time-date-input:hover {
+    border-color: #999;
+}
+
+/* 小时选择下拉框 */
+.time-hour-select {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 11px;
+    color: #333;
+    transition: all 0.3s ease;
+    min-width: 60px;
+    width: 60px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.time-hour-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.time-hour-select:hover {
+    border-color: #999;
+}
+
+/* 分钟选择下拉框 */
+.time-minute-select {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 11px;
+    color: #333;
+    transition: all 0.3s ease;
+    min-width: 60px;
+    width: 60px;
+    height: 20px;
+    cursor: pointer;
+}
+
+
+.time-minute-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.time-minute-select:hover {
+    border-color: #999;
+}
+
+/* 时间选择下拉框 - 保留兼容性 */
+.time-select {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 11px;
+    color: #333;
+    transition: all 0.3s ease;
+    min-width: 80px;
+    width: 80px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.time-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.time-select:hover {
+    border-color: #999;
+}
+
+/* 兼容旧的time-input类 */
+.time-input {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: 11px;
+    color: #333;
+    transition: all 0.3s ease;
+    min-width: 100px;
+    width: 100px;
+    height: 20px;
+}
+
+.time-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.time-input:hover {
+    border-color: #999;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .time-filter-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .time-input-group {
+        width: 100%;
+    }
+    
+    .time-input {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .filters-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    
+    .filter-group {
+        min-width: auto;
+    }
+    
+    .clear-filters-btn {
+        margin-left: 0;
+        align-self: center;
+    }
+}
+
+/* 为页面内容添加顶部边距，避免被筛选器遮挡 */
+body {
+    padding-top: 60px;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-top: 100px;
+    }
+}
