@@ -9,12 +9,14 @@
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link rel="stylesheet" href="css/map.css">
     <link rel="stylesheet" href="css/stackedarea.css">
+    <link rel="stylesheet" href="css/circlepacking.css">
     <link rel="stylesheet" href="css/filters.css">
 
     <script>
         $( function() {
             $( "#map" ).draggable({ handle: ".map-header" });
             $( ".stackedarea-container" ).draggable({ handle: ".stackedarea-header" });
+            $( ".circlepacking-container" ).draggable({ handle: ".circlepacking-header" });
         } );
     </script>
 </head>
@@ -30,33 +32,40 @@
         <h1>St.HIMARK地图可视化</h1>
     </div> -->
 
-<div id="map" class="ui-widget-content">
-    <div class="map-header">St.HIMARK's map</div>
-    <div class="zoom-controls">
-        <button id="zoom-in">+</button>
-        <button id="zoom-out">-</button>
-        <button id="zoom-reset">reset</button>
+    <!-- 地图容器 -->
+    <div id="map" class="ui-widget-content">
+        <div class="map-header">St.HIMARK's map</div>
+        <div class="zoom-controls">
+            <button id="zoom-in">+</button>
+            <button id="zoom-out">-</button>
+            <button id="zoom-reset">reset</button>
+        </div>
+        <div class="heatmap-filter">
+            <label for="heatmap-type">variable:</label>
+            <select id="heatmap-type">
+                <option value="messages">count</option>
+                <option value="users">user num.</option>
+            </select>
+        </div>
+        <svg width="100%" height="100%">
+            <g id="regMap"></g>
+            <g id="hospitalLayer"></g>
+            <g id="radiationLayer"></g>
+            <g class="legendGroup" transform="translate(20, 20)"></g>
+        </svg>
     </div>
-    <div class="heatmap-filter">
-        <label for="heatmap-type">variable:</label>
-        <select id="heatmap-type">
-            <option value="messages">count</option>
-            <option value="users">user num.</option>
-        </select>
-    </div>
-    <svg width="100%" height="100%">
-        <g id="regMap"></g>
-        <g id="hospitalLayer"></g>
-        <g id="radiationLayer"></g>
-        <g class="legendGroup" transform="translate(20, 20)"></g>
-    </svg>
-</div>
 
-<!-- 堆叠面积图容器 -->
-<div class="stackedarea-container ui-widget-content">
-    <!-- <div class="stackedarea-header">不同类别言论数时间变化</div> -->
-    <div id="stackedarea-chart"></div>
-</div>
+    <!-- 堆叠面积图容器 -->
+    <div class="stackedarea-container ui-widget-content">
+        <div class="stackedarea-header">不同类别言论数时间变化</div>
+        <div id="stackedarea-chart"></div>
+    </div>
+
+    <!-- 圆形打包图容器 -->
+    <div class="circlepacking-container ui-widget-content">
+        <div class="circlepacking-header">言论类别分布</div>
+        <div id="circlepacking-chart"></div>
+    </div>
 
 </div> <!-- 关闭container div -->
 
@@ -64,5 +73,14 @@
 <script src="js/filters.js"></script>
 <script src="js/map.js"></script>
 <script src="js/stackedarea.js"></script>
+<script src="js/circlepacking.js"></script>
+<script>
+    // 初始化所有图表
+    document.addEventListener('DOMContentLoaded', function() {
+        initMap();
+        initStackedArea();
+        initCirclePacking();
+    });
+</script>
 </body>
 </html>

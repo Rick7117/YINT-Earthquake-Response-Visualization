@@ -65,7 +65,7 @@ class QdrantSearchClient(SearchClient):
                 query_vector=query_vector,
                 limit=limit,
                 with_payload=True,
-                score_threshold=0.3,  # 只返回相似度高于0.5的结果
+                score_threshold=0.0,  # 只返回相似度高于0.5的结果
             )
         except Exception as e:
             error_msg = str(e)

@@ -554,6 +554,12 @@ class FilterManager {
         this.callbacks.forEach(callback => {
             callback(this.selectedFilters, this.timeFilter);
         });
+        // 更新地图
+        updateMapWithFilteredData(this.selectedFilters);
+        // 更新堆叠面积图
+        updateStackedAreaWithFilteredData(this.selectedFilters);
+        // 更新圆形打包图
+        updateCirclePackingWithFilteredData(this.selectedFilters);
     }
 
     // 获取当前筛选状态

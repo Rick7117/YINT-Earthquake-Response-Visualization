@@ -11,6 +11,7 @@ class StackedAreaChart {
         this.data = [];
         this.processedData = [];
         this.categories = [];
+        this.regionName = null; // 新增属性：地区名称
     }
 
     // 从Qdrant向量数据库获取数据的函数
@@ -196,6 +197,16 @@ class StackedAreaChart {
         
         console.log('=== 日期筛选过程结束 ===');
         return filteredData;
+    }
+
+    // 按地区过滤数据
+    applyRegionFilter(data, regionName) {
+        if (!regionName) {
+            // 未选择地区，直接返回原始数据
+            return data;
+        }
+        console.log('按照地区过滤数据:', regionName);
+        return data.filter(d => d.location === regionName);
     }
 
     // 处理数据，按时间和类别聚合
@@ -427,6 +438,20 @@ class StackedAreaChart {
         
         // 绘制图例
         this.renderLegend();
+        
+        // 如果传入了地区名称（存在 regionName），在右上角显示标签
+        const regionName = this.regionName || null;
+        this.svg.selectAll('.region-label').remove();
+        if (regionName) {
+            this.svg.append('text')
+                .attr('class', 'region-label')
+                .attr('x', this.width)
+                .attr('y', -5)
+                .attr('text-anchor', 'end')
+                .style('fill', '#333')
+                .style('font-weight', 'bold')
+                .text(`Region: ${regionName}`);
+        }
     }
 
     // 绘制图例
@@ -458,9 +483,9 @@ class StackedAreaChart {
     }
 
     // 生成图表
-    async generateFromData(selectedFilters = null) {
+    async generateFromData(selectedFilters = null, regionName = null) {
         try {
-            console.log('开始生成堆叠面积图，筛选条件:', selectedFilters);
+            console.log('开始生成堆叠面积图，筛选条件:', selectedFilters, '选中地区:', regionName);
             
             // 获取数据
             const rawData = await this.fetchDataFromQdrant(selectedFilters);
@@ -471,8 +496,12 @@ class StackedAreaChart {
                 return;
             }
             
+            // 根据地区过滤
+            const regionFilteredData = this.applyRegionFilter(rawData, regionName);
+
             // 处理数据
-            this.processData(rawData);
+            this.regionName = regionName; // 保存所选地区名称
+            this.processData(regionFilteredData);
             
             // 初始化SVG
             this.initSVG();
@@ -486,8 +515,8 @@ class StackedAreaChart {
     }
 
     // 更新图表（用于筛选器）
-    async update(selectedFilters) {
-        await this.generateFromData(selectedFilters);
+    async update(selectedFilters, timeFilter, regionName = null) {
+        await this.generateFromData(selectedFilters, regionName);
     }
 }
 
@@ -506,8 +535,8 @@ async function initStackedArea() {
 }
 
 // 更新堆叠面积图（供筛选器调用）
-async function updateStackedAreaWithFilteredData(selectedFilters) {
+async function updateStackedAreaWithFilteredData(selectedFilters, timeFilter, regionName = null) {
     if (stackedAreaInstance) {
-        await stackedAreaInstance.update(selectedFilters);
+        await stackedAreaInstance.update(selectedFilters, timeFilter, regionName);
     }
 }

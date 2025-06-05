@@ -1,0 +1,85 @@
+/* ============================
+   Circle Packing – refreshed CSS
+   This file replaces the previous circlepacking.css
+   to (1) keep the chart and its container perfectly
+   centred, (2) ensure the SVG always fits the
+   container, and (3) remove the grey strip behind
+   the header.
+   ============================ */
+
+/* Tooltip stays unchanged (just grouped for clarity) */
+.circlepacking-tooltip {
+    position: absolute;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* ---------- Container & Layout ---------- */
+.circlepacking-container {
+    position: absolute;
+    top: 670px; /* 向下移动 */
+    left:670px;
+    right: 0;
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 75vh;
+    width: 45%;  /* Ensure full width to prevent overflow */
+    overflow: hidden;  /* Prevent overflow */
+
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    /* centring contents (header + chart) */
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- Header ---------- */
+.circlepacking-header {
+    padding: 10px 14px;
+    font-weight: 700;
+    cursor: move;
+
+    /* remove default grey bg */
+    background: transparent;
+    border-bottom: 1px solid #ddd;
+    border-radius: 8px 8px 0 0;
+}
+
+/* ---------- Chart body ---------- */
+#circlepacking-chart {
+    width: 100%; /* 放大图表 */
+    height: 100%;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* SVG auto–fit to container */
+#circlepacking-chart svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Visual polish – optional */
+#circlepacking-chart circle {
+    transition: stroke-width 0.3s ease;
+}
+#circlepacking-chart circle:hover {
+    stroke-width: 3px;
+    cursor: pointer;
+}
+#circlepacking-chart text {
+    font-family: Arial, sans-serif;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}

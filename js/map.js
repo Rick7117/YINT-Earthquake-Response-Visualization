@@ -595,7 +595,7 @@ function drawMapWithHeatmap(geojson, messageCounts) {
         .attr("x", scaleSize / 2)
         .attr("y", 15)
         .attr("text-anchor", "middle")
-        .text(`${pixelScale.toFixed(2)} Map Scale`);
+        .text(`${pixelScale.toFixed(2)} 单位`);
 
     // 辅助函数
     function removeWhitespace(str) {
@@ -613,9 +613,28 @@ function drawMapWithHeatmap(geojson, messageCounts) {
             .style("opacity", 0.5);
     }
 
+    let selectedRegion = null; // 在全局增加一个保存当前选中地区的变量
+
     function click(d) {
-        let thisElm = d3.select("#" + removeWhitespace(d.properties.Nbrhood));
-        thisElm.classed("selected", function() { return !this.classList.contains("selected"); });
+        let regionName = d.properties.Nbrhood;
+        let regionElm = d3.select("#" + removeWhitespace(regionName));
+
+        // 如果再次点击同一区域，取消选中；否则更新选中
+        if (selectedRegion === regionName) {
+            selectedRegion = null;
+            regionElm.classed("selected-region", false);
+        } else {
+            d3.selectAll("path.selected-region").classed("selected-region", false);
+            selectedRegion = regionName;
+            regionElm.classed("selected-region", true);
+        }
+
+        // 更新堆叠图
+        updateStackedAreaWithFilteredData(
+            window.filterManager.getSelectedFilters(),
+            window.filterManager.getTimeFilter(),
+            selectedRegion
+        );
     }
 
     function mousemove(d) {
