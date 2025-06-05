@@ -1,275 +1,208 @@
-// circlepacking.js (updated to support category filtering)
-// 圆形打包图类
+// circlepacking.js (stable tooltip & label fix for D3 v5)
+// ------------------------------------------------------------
 class CirclePackingChart {
     constructor(containerId) {
-        this.containerId = containerId;
-        this.margin = { top: 20, right: 20, bottom: 20, left: 20 };
-        this.width = 800;
-        this.height = 800;
-        this.svg = null;
-        this.tooltip = null;
-        this.colorScale = null;
-        this.data = [];
-        this.hierarchy = null;
-
-        // 在构造函数中创建 tooltip
-        this.tooltip = d3.select('body').append('div')
-            .attr('class', 'circlepacking-tooltip')
-            .style('position', 'absolute')
-            .style('padding', '8px')
-            .style('background', 'rgba(0, 0, 0, 0.8)')
-            .style('color', 'white')
-            .style('border-radius', '4px')
-            .style('font-size', '12px')
-            .style('pointer-events', 'none')
-            .style('opacity', 0)
-            .style('z-index', '1000');
-
-        console.log('CirclePackingChart initialized with container:', containerId);
+      this.containerId = containerId;
+      this.margin = { top: 20, right: 20, bottom: 20, left: 20 };
+      this.svg = null;
+      this.width = 800;
+      this.height = 800;
+  
+      // Tooltip (一次性创建)
+      this.tooltip = d3.select('body').append('div')
+        .attr('class', 'circlepacking-tooltip')
+        .style('position', 'absolute')
+        .style('padding', '8px 10px')
+        .style('background', 'rgba(0,0,0,.8)')
+        .style('color', '#fff')
+        .style('border-radius', '4px')
+        .style('font-size', '12px')
+        .style('pointer-events', 'none')
+        .style('opacity', 0)
+        .style('z-index', 1000);
     }
-
-    // ---------------------------------------------------------------------
-    //  数据加载与预处理
-    // ---------------------------------------------------------------------
-
-    // 从 CSV 文件读取数据
-    async fetchDataFromQdrant() {
-        console.log('Fetching data from CSV...');
-        try {
-            const data = await d3.csv('data/YInt_w_label.csv');
-            console.log(`Loaded ${data.length} records from CSV`);
-            return data;
-        } catch (error) {
-            console.error('Error loading CSV data:', error);
-            return [];
-        }
+  
+    // ---------------- 数据 ----------------
+    async fetchData() {
+      try {
+        return await d3.csv('data/YInt_w_label.csv');
+      } catch (e) {
+        console.error('[CirclePacking] CSV load fail', e);
+        return [];
+      }
     }
-
-    // 按时间区间过滤
+  
     applyTimeFilters(data) {
-        if (!window.filterManager) return data;
-
-        const { startTime, endTime } = window.filterManager.getTimeFilter();
-        if (!startTime && !endTime) return data;
-
-        return data.filter(item => {
-            const itemTime = new Date(item.time);
-            if (startTime && itemTime < new Date(startTime)) return false;
-            if (endTime && itemTime > new Date(endTime))   return false;
-            return true;
-        });
+      if (!window.filterManager) return data;
+      const { startTime, endTime } = window.filterManager.getTimeFilter();
+      if (!startTime && !endTime) return data;
+      return data.filter(d => {
+        const t = new Date(d.time);
+        if (startTime && t < new Date(startTime)) return false;
+        if (endTime && t > new Date(endTime)) return false;
+        return true;
+      });
     }
-
-    // ---------------------------------------------------------------------
-    //  核心：根据 selectedFilters 构建层级结构
-    // ---------------------------------------------------------------------
-    async processData(rawData, selectedFilters = null) {
-        console.log('Processing data (category filtering enabled)...');
-
-        // 1) 读取主/子类别映射
-        const categoriesResp = await fetch('data/categories.json');
-        const categoriesJson = await categoriesResp.json();
-
-        // 建立子 → 主 映射（小写方便比较）
-        const subToMainMap = {};
-        Object.entries(categoriesJson).forEach(([main, subs]) => {
-            subs.forEach(sub => {
-                subToMainMap[sub.toLowerCase()] = main;
-            });
+  
+    async buildHierarchy(raw, selected) {
+      const categoryMap = await fetch('data/categories.json').then(r => r.json());
+  
+      // 子→主映射
+      const sub2main = {};
+      Object.entries(categoryMap).forEach(([main, subs]) => {
+        subs.forEach(s => {
+          sub2main[s.toLowerCase()] = main;
         });
-
-        // 2) 判断是否真的选了某些类别
-        let anySelection = false;
-        if (selectedFilters) {
-            anySelection = Object.values(selectedFilters).some(arr => arr && arr.length > 0);
+      });
+  
+      const hasSel = selected && Object.values(selected).some(arr => arr.length);
+      const counter = {};
+  
+      raw.forEach(item => {
+        if (!item.label) return;
+        const subRaw = item.label;
+        const sub = subRaw.toLowerCase();
+        const main = sub2main[sub] || '未分类';
+  
+        // 按筛选过滤
+        if (hasSel) {
+          const want = (selected[main] || []).map(s => s.toLowerCase());
+          if ((want.length && !want.includes(sub)) || (!want.length)) return;
         }
-
-        // 3) 统计计数
-        const categoryCounts = {};
-        rawData.forEach(item => {
-            if (!item || !item.label) return; // skip invalid
-            const subRaw = item.label;
-            const sub = subRaw.toLowerCase();
-            const main = subToMainMap[sub] || '未分类';
-
-            // ------------------  过滤逻辑  ------------------
-            if (anySelection) {
-                const selectedInMain = (selectedFilters[main] || [])
-                    .map(s => s.toLowerCase());
-
-                // 情况 A: 该主类有具体子类被选中 → 仅保留那些子类
-                if (selectedInMain.length > 0) {
-                    if (!selectedInMain.includes(sub)) return; // skip 不在选中列表
-                } else {
-                    // 情况 B: 该主类没有任何子类被选中 → 完全排除该主类
-                    return;
-                }
-            }
-            // -------------------------------------------------
-
-            if (!categoryCounts[main]) {
-                categoryCounts[main] = { count: 0, subcategories: {} };
-            }
-            categoryCounts[main].count += 1;
-            categoryCounts[main].subcategories[subRaw] = (categoryCounts[main].subcategories[subRaw] || 0) + 1;
-        });
-
-        // 4) 生成 D3 hierarchy 所需的树形对象
-        const root = { name: 'root', children: [] };
-        Object.entries(categoryCounts).forEach(([main, data]) => {
-            const mainNode = { name: main, value: data.count, children: [] };
-            Object.entries(data.subcategories).forEach(([sub, cnt]) => {
-                mainNode.children.push({ name: sub, value: cnt });
-            });
-            if (mainNode.children.length > 0) root.children.push(mainNode);
-        });
-
-        // 5) 若无数据直接返回 null
-        if (root.children.length === 0) {
-            console.warn('No data after category filtering.');
-            return null;
-        }
-
-        // 6) 构建 hierarchy
-        const hierarchy = d3.hierarchy(root)
-            .sum(d => d.value || 0)
-            .sort((a, b) => (b.value || 0) - (a.value || 0));
-
-        return hierarchy;
+  
+        counter[main] ??= { n: 0, subs: {} };
+        counter[main].n++;
+        counter[main].subs[subRaw] = (counter[main].subs[subRaw] || 0) + 1;
+      });
+  
+      const root = { name: 'root', children: [] };
+      Object.entries(counter).forEach(([main, { n, subs }]) => {
+        const children = Object.entries(subs).map(([s, c]) => ({ name: s, value: c }));
+        if (children.length) root.children.push({ name: main, value: n, children });
+      });
+  
+      if (!root.children.length) return null;
+      return d3.hierarchy(root).sum(d => d.value).sort((a, b) => b.value - a.value);
     }
-
-    // ---------------------------------------------------------------------
-    //  初始化 SVG
-    // ---------------------------------------------------------------------
+  
+    // ---------------- SVG ----------------
     initSVG() {
-        const container = d3.select(`#${this.containerId}`);
-        if (container.empty()) {
-            console.error(`Container #${this.containerId} not found!`);
-            return;
-        }
-        container
-            .style('display', 'flex')
-            .style('justify-content', 'center')
-            .style('align-items', 'center')
-            .style('overflow', 'hidden');
-
-        const { width, height } = container.node().getBoundingClientRect();
-        this.width  = width  - this.margin.left - this.margin.right;
-        this.height = height - this.margin.top  - this.margin.bottom;
-
-        container.selectAll('*').remove();
-        this.svg = container.append('svg')
-            .attr('width',  this.width  + this.margin.left + this.margin.right)
-            .attr('height', this.height + this.margin.top  + this.margin.bottom)
-            .append('g')
-            .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
+      const container = d3.select('#' + this.containerId);
+      if (container.empty()) return;
+  
+      container.style('display', 'flex')
+        .style('justify-content', 'center')
+        .style('align-items', 'center')
+        .style('overflow', 'hidden');
+  
+      const { width, height } = container.node().getBoundingClientRect();
+      this.width = (width  > 0 ? width  : 800) - this.margin.left - this.margin.right;
+      this.height = (height > 0 ? height : 800) - this.margin.top  - this.margin.bottom;
+  
+      container.selectAll('*').remove();
+      this.svg = container.append('svg')
+        .attr('width', this.width  + this.margin.left + this.margin.right)
+        .attr('height', this.height + this.margin.top  + this.margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
     }
-
-    // ---------------------------------------------------------------------
-    //  渲染
-    // ---------------------------------------------------------------------
-    async render() {
-        if (!this.hierarchy) {
-            console.warn('No hierarchy to render.');
-            return;
-        }
-
-        // 创建打包布局
-        const pack = d3.pack()
-            .size([this.width - 20, this.height - 20])
-            .padding(3);
-        const root = pack(this.hierarchy);
-
-        // 颜色比例尺（基于当前展示的主分类）
-        const mainCats = this.hierarchy.children.map(d => d.data.name);
-        this.colorScale = d3.scaleOrdinal()
-            .domain(mainCats)
-            .range(d3.schemeCategory10);
-
-        // 清除旧图层
-        this.svg.selectAll('*').remove();
-        const self = this;
-
-        // 节点组
-        const node = this.svg.selectAll('g')
-            .data(root.descendants())
-            .enter().append('g')
-            .attr('transform', d => `translate(${d.x},${d.y})`)
-            .on('mouseover', function (event, d) {
-                if (!d.data || d.depth === 0) return;
-                self.tooltip
-                    .style('opacity', 0.9)
-                    .html(`类别: ${d.data.name}<br/>数量: ${d.value ?? 0}`)
-                    .style('left', `${event.pageX + 10}px`)
-                    .style('top',  `${event.pageY - 28}px`);
-            })
-            .on('mouseout', () => self.tooltip.style('opacity', 0));
-
-        // 圆形
-        node.append('circle')
-            .attr('r', d => d.r)
-            .style('fill', d => {
-                if (!d.parent) return '#ccc';
-                return d.depth === 1
-                    ? self.colorScale(d.data.name)
-                    : d3.color(self.colorScale(d.parent.data.name)).brighter(0.5);
-            })
-            .style('stroke', '#fff')
-            .style('stroke-width', 2);
-
-        // 子类别文本 (depth===2)
-        node.filter(d => d.depth === 2)
-            .append('text')
-            .attr('dy', '0.35em')
-            .style('text-anchor', 'middle')
-            .style('pointer-events', 'none')
-            .text(d => d.data.name)
-            .each(function(d) {
-                const txt = d3.select(this);
-                let fontSize = Math.min(d.r * 0.4, 10);
-                while (fontSize >= 4) {
-                    txt.style('font-size', `${fontSize}px`);
-                    if (this.getComputedTextLength() <= d.r * 1.8) break;
-                    fontSize -= 1;
-                }
-                if (fontSize < 4) txt.text('');
-            });
+  
+    // ---------------- 渲染 ----------------
+    render() {
+      if (!this.hierarchy) return;
+  
+      // 打包布局
+      const pack = d3.pack()
+        .size([this.width -20, this.height-20])
+        .padding(3);
+      const root = pack(this.hierarchy);
+  
+      // 颜色尺
+      const domains = (this.hierarchy.children || []).map(d => d.data?.name || '');
+      this.colorScale = d3.scaleOrdinal().domain(domains).range(d3.schemeCategory10);
+  
+      this.svg.selectAll('*').remove();
+      const self = this;
+  
+      const node = this.svg.selectAll('g')
+        .data(root.descendants())
+        .enter().append('g')
+        .attr('transform', d => `translate(${d.x},${d.y})`);
+  
+      // 圆形及 tooltip 事件
+      node.append('circle')
+        .attr('r', d => d.r)
+        .attr('fill', d => {
+          if (!d.parent || !d.parent.data || !d.parent.data.name) return '#ccc';
+          if (!d.data || !d.data.name) return '#ccc';
+          return d.depth === 1
+            ? self.colorScale(d.data.name)
+            : d3.color(self.colorScale(d.parent.data.name)).brighter(0.5);
+        })
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 2)
+        .on('mouseenter', function(d) {
+          // D3 v5：使用 d3.event 获取原生事件
+          const e = d3.event;
+          if (d.depth === 0 || !d.data) return;
+          self.tooltip
+            .style('opacity', 0.95)
+            .html(`类别：${d.data.name}<br/>数量：${d.value ?? 0}`)
+            .style('left', `${e.pageX + 12}px`)
+            .style('top', `${e.pageY - 28}px`);
+        })
+        .on('mousemove', function() {
+          const e = d3.event;
+          self.tooltip
+            .style('left', `${e.pageX + 12}px`)
+            .style('top', `${e.pageY - 28}px`);
+        })
+        .on('mouseleave', () => self.tooltip.style('opacity', 0));
+  
+      // 小类标签（depth === 2）
+      node.filter(d => d.depth === 2)
+        .append('text')
+        .attr('dy', '0.35em')
+        .attr('text-anchor', 'middle')
+        .style('pointer-events', 'none')
+        .text(d => d.data?.name || '')
+        .each(function(d) {
+          const txt = d3.select(this);
+          let fs = Math.min(d.r * 0.4, 10);
+          while (fs >= 4) {
+            txt.style('font-size', fs + 'px');
+            if (this.getComputedTextLength() <= d.r * 1.8) break;
+            fs -= 1;
+          }
+          if (fs < 4) txt.text('');
+        });
     }
-
-    // ---------------------------------------------------------------------
-    //  对外 API
-    // ---------------------------------------------------------------------
-    async generateFromData(selectedFilters = null) {
-        const raw = await this.fetchDataFromQdrant();
-        const timeFiltered = this.applyTimeFilters(raw);
-        this.hierarchy = await this.processData(timeFiltered, selectedFilters);
-        if (!this.hierarchy) return; // no data
-        this.initSVG();
-        await this.render();
+  
+    // ---------------- API ----------------
+    async generate(sel = null) {
+      const raw = await this.fetchData();
+      const tf = this.applyTimeFilters(raw);
+      this.hierarchy = await this.buildHierarchy(tf, sel);
+      if (!this.hierarchy) return;
+      this.initSVG();
+      this.render();
     }
-
-    async update(selectedFilters) {
-        console.log('CirclePacking – update with filters:', selectedFilters);
-        await this.generateFromData(selectedFilters);
-    }
-}
-
-// -------------------------------------------------------------------------
-// 外部接口 & 全局实例
-// -------------------------------------------------------------------------
-let circlePackingInstance = null;
-
-async function initCirclePacking() {
+  
+    update(sel) { return this.generate(sel); }
+  }
+  
+  // 全局实例 & 钩子
+  let circlePackingInstance;
+  async function initCirclePacking() {
     circlePackingInstance = new CirclePackingChart('circlepacking-chart');
-    await circlePackingInstance.generateFromData();
-}
-
-async function updateCirclePackingWithFilteredData(selectedFilters) {
+    await circlePackingInstance.generate();
+  }
+  async function updateCirclePackingWithFilteredData(sel) {
     if (!circlePackingInstance) await initCirclePacking();
-    await circlePackingInstance.update(selectedFilters);
-}
+    await circlePackingInstance.update(sel);
+  }
+  
+  document.addEventListener('DOMContentLoaded', initCirclePacking);
+  
 
-// 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', () => {
-    initCirclePacking();
-});
+  
