@@ -44,30 +44,23 @@ async function fetchDataFromQdrant(selectedFilters = null) {
         
         // 如果有筛选条件，使用向量相似度搜索
         if (selectedFilters && Object.keys(selectedFilters).length > 0) {
-            // 收集所有选中的词条
-            const selectedTerms = [];
-            for (const [category, terms] of Object.entries(selectedFilters)) {
-                if (terms && terms.length > 0) {
-                    selectedTerms.push(...terms);
-                }
-            }
-            
-            if (selectedTerms.length > 0) {
-                console.log('选中的搜索关键词:', selectedTerms);
+            // 检查是否有向量搜索筛选器
+            if (selectedFilters.vector_search && selectedFilters.vector_search.length > 0) {
+                // 向量搜索模式
+                const searchTerms = selectedFilters.vector_search;
                 
-                // 对每个选中的词条进行向量搜索
-                for (const term of selectedTerms) {
+                for (const term of searchTerms) {
                     try {
-                        console.log(`地图正在搜索关键词: "${term}"`);
+                        console.log(`地图正在进行向量搜索: "${term}"`);
                         
                         // 调用Python搜索API
-                        const searchResponse = await fetch(`http://127.0.0.1:8000/search/vector?query=${encodeURIComponent(term)}&limit=1000`, {
+                        const searchResponse = await fetch(`http://127.0.0.1:8000/search/vector?query=${encodeURIComponent(term)}&limit=20000`, {
                             method: 'GET'
                         });
                         
                         if (searchResponse.ok) {
                             const searchData = await searchResponse.json();
-                            console.log(`关键词 "${term}" 搜索到 ${searchData.results.length} 条结果:`, searchData.results);
+                            console.log(`向量搜索 "${term}" 找到 ${searchData.results.length} 条结果:`, searchData.results);
                             
                             // 将搜索结果转换为统一格式
                             const formattedResults = searchData.results.map(result => ({
@@ -81,7 +74,50 @@ async function fetchDataFromQdrant(selectedFilters = null) {
                             allResults.push(...formattedResults);
                         }
                     } catch (searchError) {
-                        console.warn(`搜索词条 "${term}" 失败:`, searchError);
+                        console.warn(`向量搜索 "${term}" 失败:`, searchError);
+                    }
+                }
+            } else {
+                // 常规分类筛选模式
+                // 收集所有选中的词条
+                const selectedTerms = [];
+                for (const [category, terms] of Object.entries(selectedFilters)) {
+                    if (terms && terms.length > 0) {
+                        selectedTerms.push(...terms);
+                    }
+                }
+                
+                if (selectedTerms.length > 0) {
+                    console.log('选中的搜索关键词:', selectedTerms);
+                    
+                    // 对每个选中的词条进行向量搜索
+                    for (const term of selectedTerms) {
+                        try {
+                            console.log(`地图正在搜索关键词: "${term}"`);
+                            
+                            // 调用Python搜索API
+                            const searchResponse = await fetch(`http://127.0.0.1:8000/search/vector?query=${encodeURIComponent(term)}&limit=20000`, {
+                                method: 'GET'
+                            });
+                            
+                            if (searchResponse.ok) {
+                                const searchData = await searchResponse.json();
+                                console.log(`关键词 "${term}" 搜索到 ${searchData.results.length} 条结果:`, searchData.results);
+                                
+                                // 将搜索结果转换为统一格式
+                                const formattedResults = searchData.results.map(result => ({
+                                    payload: {
+                                        time: result.time,
+                                        location: result.location,
+                                        account: result.account,
+                                        message: result.message
+                                    }
+                                }));
+                                allResults.push(...formattedResults);
+                            }
+                        } catch (searchError) {
+                            console.warn(`搜索词条 "${term}" 失败:`, searchError);
+                        }
                     }
                 }
             }
@@ -180,8 +216,7 @@ function applyTimeFilters(data) {
             if (timeFilter.startTime) {
                 const startTime = new Date(timeFilter.startTime);
                 if (itemTime < startTime) {
-                    console.log(`数据项被开始时间筛选掉: ${item.time} < ${timeFilter.startTime}`);
-                    return false;
+                     return false;
                 }
             }
             
@@ -193,8 +228,6 @@ function applyTimeFilters(data) {
                     return false;
                 }
             }
-            
-            console.log(`数据项通过筛选: ${item.time}`);
             return true;
         });
         
@@ -211,7 +244,17 @@ function applyTimeFilters(data) {
 async function processMapData(selectedFilters = null) {
     try {
         // 根据筛选条件获取数据
-        let data = selectedFilters ? await fetchDataFromQdrant(selectedFilters) : csvData;
+        let data;
+        if (selectedFilters === null) {
+            // 重置时获取所有数据
+            data = await fetchDataFromQdrant(null);
+        } else if (selectedFilters && Object.keys(selectedFilters).some(key => selectedFilters[key].length > 0)) {
+            // 有筛选条件时使用筛选
+            data = await fetchDataFromQdrant(selectedFilters);
+        } else {
+            // 使用缓存的数据
+            data = csvData;
+        }
         
         // 应用日期筛选器
         data = applyTimeFilters(data);
@@ -265,6 +308,7 @@ async function processMapData(selectedFilters = null) {
 // 供筛选器调用的地图更新函数
 async function updateMapWithFilteredData(selectedFilters) {
     // 使用筛选条件重新处理数据并更新地图
+    // 当selectedFilters为null时，获取所有数据
     await processMapData(selectedFilters);
 }
 
@@ -379,7 +423,7 @@ function drawMapWithHeatmap(geojson, messageCounts) {
     function updateScaleBar(k) {
         const scaleSize = 100; // 比例尺长度
         const pixelScale = scaleSize / (s * 0.01 * k); // 根据缩放级别调整比例尺
-        d3.select('.scale-bar text').text(`${pixelScale.toFixed(2)} 单位`);
+        d3.select('.scale-bar text').text(`${pixelScale.toFixed(2)} map sacle`);
     }
 
     // 创建颜色比例尺
@@ -484,8 +528,8 @@ function drawMapWithHeatmap(geojson, messageCounts) {
     
     // 添加图例
     const iconFiles = [
-        {"Radiation": "Icon/radiation.svg"}, 
-        {"hospital": "Icon/Hospital.svg"}
+        {"Nuclear plant": "Icon/radiation.svg"}, 
+        {"Hospital": "Icon/Hospital.svg"}
     ];
     
     const legendSvg = d3.select('#map svg g.legendGroup');
@@ -595,7 +639,7 @@ function drawMapWithHeatmap(geojson, messageCounts) {
         .attr("x", scaleSize / 2)
         .attr("y", 15)
         .attr("text-anchor", "middle")
-        .text(`${pixelScale.toFixed(2)} 单位`);
+        .text(`${pixelScale.toFixed(2)} map scale`);
 
     // 辅助函数
     function removeWhitespace(str) {

@@ -147,7 +147,7 @@ class CirclePackingChart {
           if (d.depth === 0 || !d.data) return;
           self.tooltip
             .style('opacity', 0.95)
-            .html(`类别：${d.data.name}<br/>数量：${d.value ?? 0}`)
+            .html(`topic：${d.data.name}<br/>count：${d.value ?? 0}`)
             .style('left', `${e.pageX + 12}px`)
             .style('top', `${e.pageY - 28}px`);
         })

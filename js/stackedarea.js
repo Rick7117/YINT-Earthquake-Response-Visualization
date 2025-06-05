@@ -21,30 +21,23 @@ class StackedAreaChart {
             
             // 如果有筛选条件，使用向量相似度搜索
             if (selectedFilters && Object.keys(selectedFilters).length > 0) {
-                // 收集所有选中的词条
-                const selectedTerms = [];
-                for (const [category, terms] of Object.entries(selectedFilters)) {
-                    if (terms && terms.length > 0) {
-                        selectedTerms.push(...terms);
-                    }
-                }
-                
-                if (selectedTerms.length > 0) {
-                    console.log('堆叠面积图选中的搜索关键词:', selectedTerms);
+                // 检查是否有向量搜索筛选器
+                if (selectedFilters.vector_search && selectedFilters.vector_search.length > 0) {
+                    // 向量搜索模式
+                    const searchTerms = selectedFilters.vector_search;
                     
-                    // 对每个选中的词条进行向量搜索
-                    for (const term of selectedTerms) {
+                    for (const term of searchTerms) {
                         try {
-                            console.log(`堆叠面积图正在搜索关键词: "${term}"`);
+                            console.log(`堆叠面积图正在进行向量搜索: "${term}"`);
                             
                             // 调用Python搜索API
-                            const searchResponse = await fetch(`http://127.0.0.1:8000/search/vector?query=${encodeURIComponent(term)}&limit=1000`, {
+                            const searchResponse = await fetch(`http://127.0.0.1:8000/search/vector?query=${encodeURIComponent(term)}&limit=20000`, {
                                 method: 'GET'
                             });
                             
                             if (searchResponse.ok) {
                                 const searchData = await searchResponse.json();
-                                console.log(`关键词 "${term}" 搜索到 ${searchData.results.length} 条结果`);
+                                console.log(`向量搜索 "${term}" 找到 ${searchData.results.length} 条结果`);
                                 
                                 // 将搜索结果转换为统一格式
                                 const formattedResults = searchData.results.map(result => ({
@@ -59,12 +52,56 @@ class StackedAreaChart {
                                 allResults.push(...formattedResults);
                             }
                         } catch (searchError) {
-                            console.warn(`搜索词条 "${term}" 失败:`, searchError);
+                            console.warn(`向量搜索 "${term}" 失败:`, searchError);
                         }
                     }
-                } else {
-                    // 有筛选条件但没有选中任何词条，返回空数组
-                    return [];
+                } else if (Object.keys(selectedFilters).some(key => selectedFilters[key].length > 0)) {
+                    // 常规分类筛选模式
+                    // 收集所有选中的词条
+                    const selectedTerms = [];
+                    for (const [category, terms] of Object.entries(selectedFilters)) {
+                        if (terms && terms.length > 0) {
+                            selectedTerms.push(...terms);
+                        }
+                    }
+                    
+                    if (selectedTerms.length > 0) {
+                        console.log('堆叠面积图选中的搜索关键词:', selectedTerms);
+                        
+                        // 对每个选中的词条进行向量搜索
+                        for (const term of selectedTerms) {
+                            try {
+                                console.log(`堆叠面积图正在搜索关键词: "${term}"`);
+                                
+                                // 调用Python搜索API
+                                const searchResponse = await fetch(`http://127.0.0.1:8000/search/vector?query=${encodeURIComponent(term)}&limit=20000`, {
+                                    method: 'GET'
+                                });
+                                
+                                if (searchResponse.ok) {
+                                    const searchData = await searchResponse.json();
+                                    console.log(`关键词 "${term}" 搜索到 ${searchData.results.length} 条结果`);
+                                    
+                                    // 将搜索结果转换为统一格式
+                                    const formattedResults = searchData.results.map(result => ({
+                                        payload: {
+                                            time: result.time,
+                                            location: result.location,
+                                            account: result.account,
+                                            message: result.message,
+                                            label: result.label || result.main_category || 'all data'
+                                        }
+                                    }));
+                                    allResults.push(...formattedResults);
+                                }
+                            } catch (searchError) {
+                                console.warn(`搜索词条 "${term}" 失败:`, searchError);
+                            }
+                        }
+                    } else {
+                        // 有筛选条件但没有选中任何词条，返回空数组
+                        return [];
+                    }
                 }
             } else {
                 // 没有筛选条件时，获取所有数据
@@ -186,7 +223,6 @@ class StackedAreaChart {
                     }
                 }
                 
-                console.log(`数据项通过筛选: ${item.time}`);
                 return true;
             });
             
@@ -349,26 +385,42 @@ class StackedAreaChart {
         // 在每个组中绘制堆叠的矩形
         stackedData.forEach((categoryData, categoryIndex) => {
             barGroups.selectAll(`.bar-${categoryIndex}`)
-                .data(d => [categoryData.find(item => item.data.date.getTime() === d.date.getTime())])
+                .data((d, i) => {
+                    // 从堆叠数据中获取对应时间点的数据
+                    const stackedItem = categoryData[i];
+                    // 将原始数据、类别键和索引都传递过去
+                    return [{ stackedItem: stackedItem, originalData: d, timeIndex: i, categoryKey: categoryData.key }];
+                })
                 .enter().append('rect')
                 .attr('class', `bar bar-${categoryIndex}`)
                 .attr('x', 0)
-                .attr('y', d => d ? yScale(d[1]) : yScale(0))
+                .attr('y', d => d.stackedItem ? yScale(d.stackedItem[1]) : yScale(0))
                 .attr('width', barWidth)
-                .attr('height', d => d ? yScale(d[0]) - yScale(d[1]) : 0)
+                .attr('height', d => d.stackedItem ? yScale(d.stackedItem[0]) - yScale(d.stackedItem[1]) : 0)
                 .style('fill', this.colorScale(categoryData.key))
                 .style('fill-opacity', 1.0)
-                .on('mouseover', (event, d) => {
-                    this.tooltip.transition()
+                .on('mouseover', function(event, d) {
+                    // 使用function而不是箭头函数，确保this指向正确
+                    const tooltip = d3.select('.stackedarea-tooltip');
+                    tooltip.transition()
                         .duration(200)
                         .style('opacity', .9);
-                    const value = d ? d[1] - d[0] : 0;
-                    this.tooltip.html(`类别: ${categoryData.key}<br/>数量: ${value}`)
-                        .style('left', (event.pageX + 10) + 'px')
-                        .style('top', (event.pageY - 28) + 'px');
-                })
-                .on('mouseout', () => {
-                    this.tooltip.transition()
+                    // 直接从原始数据中获取该类别的数值
+                    let value = 0;
+                    console.log('数据结构:', d);
+                    if (d && d.originalData && d.stackedItem && d.stackedItem.dataKey && d.originalData[d.stackedItem.dataKey] !== undefined) {
+                        value = d.originalData[d.stackedItem.dataKey];
+                    }
+                    // 获取鼠标相对于页面的位置
+                    const mouseX = event.pageX || d3.event.pageX;
+                    const mouseY = event.pageY || d3.event.pageY;
+                    tooltip.html(`类别: ${d.categoryKey}<br/>数量: ${value}`)
+                        .style('left', (mouseX + 10) + 'px')
+                        .style('top', (mouseY - 28) + 'px');
+                }.bind(this))
+                .on('mouseout', function() {
+                    const tooltip = d3.select('.stackedarea-tooltip');
+                    tooltip.transition()
                         .duration(500)
                         .style('opacity', 0);
                 });

@@ -344,12 +344,77 @@ class FilterManager {
 
         timeContainer.appendChild(startTimeDiv);
         timeContainer.appendChild(endTimeDiv);
+        
+        // 添加搜索筛选器
+        const searchFilterDiv = this.createSearchFilterGroup();
+        timeContainer.appendChild(searchFilterDiv);
+        
         group.appendChild(timeContainer);
 
         // 初始化现有的时间筛选值
         this.initializeTimeInputs(startDateInput, startHourSelect, startMinuteSelect, endDateInput, endHourSelect, endMinuteSelect);
 
         return group;
+    }
+
+    // 创建搜索筛选器组
+    createSearchFilterGroup() {
+        const searchDiv = document.createElement('div');
+        searchDiv.className = 'search-filter-group';
+        
+        const searchLabel = document.createElement('label');
+        searchLabel.textContent = 'Vector Search';
+        searchLabel.className = 'search-label';
+        
+        const searchInputContainer = document.createElement('div');
+        searchInputContainer.className = 'search-input-container';
+        
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'search-input';
+        searchInput.placeholder = 'Enter search term...';
+        searchInput.id = 'vector-search-input';
+        
+        const searchButton = document.createElement('button');
+        searchButton.className = 'search-button';
+        searchButton.textContent = 'Search';
+        searchButton.onclick = () => this.performVectorSearch();
+        
+        // 支持回车键搜索
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.performVectorSearch();
+            }
+        });
+        
+        searchInputContainer.appendChild(searchInput);
+        searchInputContainer.appendChild(searchButton);
+        
+        searchDiv.appendChild(searchLabel);
+        searchDiv.appendChild(searchInputContainer);
+        
+        return searchDiv;
+    }
+
+    // 执行向量搜索
+    async performVectorSearch() {
+        const searchInput = document.getElementById('vector-search-input');
+        const searchTerm = searchInput.value.trim();
+        
+        if (!searchTerm) {
+            alert('Please enter a search term');
+            return;
+        }
+        
+        console.log('执行向量搜索:', searchTerm);
+        
+        // 创建搜索筛选条件
+        const searchFilters = {
+            'vector_search': [searchTerm]
+        };
+        
+        // 通知所有回调函数进行搜索
+        this.notifyCallbacks(searchFilters);
     }
 
     // 初始化时间输入框的值
@@ -509,7 +574,8 @@ class FilterManager {
         minuteSelects.forEach(select => select.selectedIndex = 0);
         
         this.updateAllUI();
-        this.notifyCallbacks();
+        // 重置时传递null来获取所有数据
+        this.notifyCallbacksWithReset();
     }
 
     // 更新UI
@@ -550,16 +616,32 @@ class FilterManager {
     }
 
     // 通知所有回调函数
-    notifyCallbacks() {
+    notifyCallbacks(searchFilters = null) {
+        // 如果有搜索筛选条件，使用搜索筛选条件；否则使用常规筛选条件
+        const filtersToUse = searchFilters || this.selectedFilters;
+        
+        this.callbacks.forEach(callback => {
+            callback(filtersToUse, this.timeFilter);
+        });
+        // 更新地图
+        updateMapWithFilteredData(filtersToUse);
+        // 更新堆叠面积图
+        updateStackedAreaWithFilteredData(filtersToUse);
+        // 更新圆形打包图
+        updateCirclePackingWithFilteredData(filtersToUse);
+    }
+
+    // 重置时通知所有回调函数（获取所有数据）
+    notifyCallbacksWithReset() {
         this.callbacks.forEach(callback => {
             callback(this.selectedFilters, this.timeFilter);
         });
-        // 更新地图
-        updateMapWithFilteredData(this.selectedFilters);
+        // 重置时传递null来获取所有数据
+        updateMapWithFilteredData(null);
         // 更新堆叠面积图
-        updateStackedAreaWithFilteredData(this.selectedFilters);
+        updateStackedAreaWithFilteredData(null);
         // 更新圆形打包图
-        updateCirclePackingWithFilteredData(this.selectedFilters);
+        updateCirclePackingWithFilteredData(null);
     }
 
     // 获取当前筛选状态
