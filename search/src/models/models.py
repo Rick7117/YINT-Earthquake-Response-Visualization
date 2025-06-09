@@ -9,7 +9,7 @@ class SearchResult(BaseModel):
     account: str
     message: str
     label: str
-    score: float  # 相似度分数
+    score: float 
 
 
 class SearchResponse(BaseModel):

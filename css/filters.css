@@ -1,4 +1,3 @@
-/* 筛选器容器样式 */
 .filters-container {
     position: fixed;
     top: 0;
@@ -15,7 +14,6 @@
     justify-content: flex-start;
 }
 
-/* 筛选器组样式 */
 .filter-group {
     display: flex;
     flex-direction: column;
@@ -30,7 +28,6 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* 多选下拉框样式 */
 .multi-select {
     position: relative;
     display: inline-block;
@@ -73,7 +70,6 @@
     transform: rotate(180deg);
 }
 
-/* 下拉选项容器 */
 .multi-select-dropdown {
     position: absolute;
     top: 100%;
@@ -94,7 +90,6 @@
     display: block;
 }
 
-/* 选项样式 */
 .multi-select-option {
     padding: 4px 8px;
     cursor: pointer;
@@ -164,7 +159,6 @@
     border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* 时间筛选器样式 */
 .time-filter-group {
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px;
@@ -172,7 +166,7 @@
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     width: 100%;
-    order: -1; /* 确保时间筛选器在第一行 */
+    order: -1;
 }
 
 .time-filter-container {
@@ -183,13 +177,12 @@
     flex-wrap: nowrap;
 }
 
-/* 搜索筛选器样式 */
 .search-filter-group {
     display: flex;
     flex-direction: column;
     gap: 5px;
     flex-shrink: 0;
-    margin-left: auto; /* 推到最右侧 */
+    margin-left: auto; 
 }
 
 .search-label {
@@ -323,7 +316,6 @@
     border-color: #999;
 }
 
-/* 小时选择下拉框 */
 .time-hour-select {
     background: white;
     border: 1px solid #ddd;
@@ -348,7 +340,6 @@
     border-color: #999;
 }
 
-/* 分钟选择下拉框 */
 .time-minute-select {
     background: white;
     border: 1px solid #ddd;
@@ -374,7 +365,6 @@
     border-color: #999;
 }
 
-/* 时间选择下拉框 - 保留兼容性 */
 .time-select {
     background: white;
     border: 1px solid #ddd;
@@ -399,7 +389,6 @@
     border-color: #999;
 }
 
-/* 兼容旧的time-input类 */
 .time-input {
     background: white;
     border: 1px solid #ddd;
@@ -423,7 +412,6 @@
     border-color: #999;
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
     .time-filter-container {
         flex-direction: column;
@@ -440,7 +428,6 @@
     }
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
     .filters-container {
         flex-direction: column;
@@ -458,7 +445,6 @@
     }
 }
 
-/* 为页面内容添加顶部边距，避免被筛选器遮挡 */
 body {
     padding-top: 60px;
 }

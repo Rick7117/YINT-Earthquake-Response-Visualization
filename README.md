@@ -1,45 +1,126 @@
-# YINT-Earthquake-Response-Visualization-
-A visual analytics system for earthquake response resource allocation based on YINT social media data
+<div align="center">
 
-## Project Overview
-This project visualizes and analyzes post-earthquake data from the YINT social media platform in St. Himark City to assist municipal government in effective emergency resource allocation. The system identifies changing community needs and provides data-driven recommendations.
+ZH | [EN](./README.md)
 
-## Key Features
-1. City-wide Situation Visualization: Damage assessment and resource demand heatmaps at 5h and 30h post-earthquake
-2. Dynamic Resource Allocation: Identifies ≥3 critical inflection points for priority adjustment
-3. Community Impact Analysis: Identifies non-infrastructure challenges affecting residents
-4. Real-time/Static Data Processing: Supports both analysis modes for different decision scenarios
+<h1>基于社区的社交媒体平台 YINT的城市分析可视化系统</h1>
 
-## Technology Stack
-• Frontend: D3.js, ECharts, Leaflet
+</div>
 
-• Backend: Python (Pandas, Flask)
+## 📋 项目概述
 
-• Data Processing: NLP sentiment analysis, geospatial analysis
+本项目旨在通过可视化分析圣希马克市地震后YINT社交媒体平台上的数据，帮助市政府有效分配紧急救援资源。系统能够识别不同社区的需求变化，并为资源调配提供数据支持。
 
-• Deployment: Docker, AWS/GCP
+## ✨ 主要功能
+
+1. **城市整体状况可视化**：展示地震后5小时和30小时内的城市受损情况和资源需求热图
+2. **动态资源分配建议**：基于时间变化识别至少三个关键转折点，调整资源优先级
+3. **社区挑战分析**：识别除基础设施外影响市民生活的其他问题
+4. **实时数据分析**：支持两种数据处理模式，适应不同决策场景
+
+## 🛠️ 技术栈
+
+- **前端**：D3.js, ECharts, Leaflet
+- **后端**：Python, FastAPI, Qdrant
+- **数据处理**：NLP情感分析，地理空间分析
+- **部署**：Docker, UV
+
+## 📊 数据来源
+
+模拟的YINT社交媒体数据，包含：
+- 用户发布的文本和图片
+- 地理位置信息
+- 时间戳
+- 用户可信度评分
 
 
-## Data Sources
-Simulated YINT social media data including:
-• User posts (text & images)
+## 🚀 安装与运行
 
-• Geotags
-
-• Timestamps
-
-• User credibility scores
-
-
-## Installation & Run
+### 1. 克隆项目
 ```bash
 git clone https://github.com/yourusername/YINT-Earthquake-Response-Visualization.git
 cd YINT-Earthquake-Response-Visualization
-pip install -r requirements.txt
-python app.py
 ```
 
-## Contributing
-PRs welcome. For major changes, please open an issue first to discuss.
+### 2. 环境准备
+需要提前安装以下依赖：
+- Docker installed
+- UV
+- Python 3.8+ with pip
 
----
+### 3. 启动 Qdrant 数据库
+
+#### 3.1 启动 Qdrant
+```bash
+cd db 
+chmod +x start-qdrant.sh
+./start-qdrant.sh
+```
+
+#### 3.2 确认 Qdrant 在运行
+```bash
+# Check container status
+docker ps | grep earthquake-qdrant
+
+# Check logs if needed
+docker logs earthquake-qdrant
+
+# Or use the provided Python utility
+python db_client.py
+```
+
+#### 3.3 访问 Qdrant Dashboard
+进入 Qdrant dashboard at http://localhost:6333/dashboard
+
+> ⚠️ **注意**：开发过程中不要关闭docker和数据库连接，否则会导致数据库无法连接。
+
+#### 3.4 关闭数据库（可选）
+```bash
+./stop-qdrant.sh
+# or manually
+docker stop bioasq-qdrant
+docker rm bioasq-qdrant
+```
+
+### 4. 构建向量数据库
+
+#### 4.1 进入目录并安装依赖
+```bash
+cd indexing_pipeline
+uv sync
+```
+
+#### 4.2 运行测试
+```bash
+uv run pytest indexing_pipeline
+```
+
+#### 4.3 构建向量数据库
+```bash
+uv run main.py
+```
+
+### 5. 启动数据库查询服务
+
+#### 5.1 进入目录并安装依赖
+```bash
+cd search
+uv sync
+```
+
+#### 5.2 启动 FastAPI 开发服务
+```bash
+uv run fastapi dev main.py
+```
+
+#### 5.3 访问查询服务
+- 查询服务详见 http://localhost:8000
+- 查询服务在前端运行过程中会被调用，请确保服务正常运行
+
+### 6. 启动前端
+
+用 live server 启动前端文件 `index.html`
+
+
+## 🤝 贡献指南
+
+欢迎提交Pull Request。重大更改请先开Issue讨论。

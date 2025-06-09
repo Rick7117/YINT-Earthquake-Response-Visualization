@@ -1,4 +1,3 @@
-// 筛选器管理类
 class FilterManager {
     constructor() {
         this.categories = {};
@@ -11,19 +10,19 @@ class FilterManager {
         this.init();
     }
 
-    // 初始化筛选器
+    
     async init() {
         try {
-            // 加载分类数据
+            
             const response = await fetch('data/categories.json');
             this.categories = await response.json();
             
-            // 初始化选中状态（默认全部不勾选）
+            
             Object.keys(this.categories).forEach(category => {
                 this.selectedFilters[category] = [];
             });
             
-            // 创建筛选器UI
+            
             this.createFilterUI();
             
         } catch (error) {

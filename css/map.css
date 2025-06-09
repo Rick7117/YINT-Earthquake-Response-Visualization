@@ -149,7 +149,6 @@ div.tooltip {
     transform: translate(-50%, -100%);
 }
 
-/* 图例样式 */
 .legendGroup {
     background-color: rgba(255, 255, 255, 0.8);
     border-radius: 4px;

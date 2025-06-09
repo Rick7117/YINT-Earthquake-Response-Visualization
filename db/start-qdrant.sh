@@ -7,7 +7,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 mkdir -p "$SCRIPT_DIR/data"
 
 docker run -d \
-  --name bioasq-qdrant \
+  --name earthquake-qdrant \
   -p 6333:6333 \
   -p 6334:6334 \
   -v "$SCRIPT_DIR/data":/qdrant/storage \
